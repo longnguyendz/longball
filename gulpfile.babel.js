@@ -22,6 +22,7 @@ import imagemin from 'gulp-imagemin';
 import pngquant from 'imagemin-pngquant';
 import runSequence from 'run-sequence';
 import ghPages from 'gulp-gh-pages';
+import ava from 'gulp-ava';
 
 const paths = {
   bundle: 'app.js',
@@ -29,6 +30,7 @@ const paths = {
   srcCss: 'src/**/*.scss',
   srcImg: 'src/images/**',
   srcLint: ['src/**/*.js', 'test/**/*.js'],
+  tst: 'test/**/*.js',
   dist: 'dist',
   distJs: 'dist/js',
   distImg: 'dist/images',
@@ -41,6 +43,7 @@ const customOpts = {
 };
 
 const opts = Object.assign({}, watchify.args, customOpts);
+
 
 gulp.task('clean', cb => {
   rimraf('dist', cb);
@@ -120,12 +123,21 @@ gulp.task('lint', () => {
 gulp.task('watchTask', () => {
   gulp.watch(paths.srcCss, ['styles']);
   gulp.watch(paths.srcLint, ['lint']);
+  gulp.watch(paths.tst, ['test'])
 });
 
 gulp.task('deploy', () => {
   gulp.src(paths.distDeploy)
     .pipe(ghPages());
 });
+
+const test = (files) => {
+  return gulp.src(files)
+    .pipe(ava())
+}
+
+gulp.task('test', () => test(paths.tst));
+gulp.task('test:watch', () => gulp.watch(paths.srcLint, ['test']));
 
 gulp.task('watch', cb => {
   runSequence('clean', ['browserSync', 'watchTask', 'watchify', 'styles', 'lint', 'images'], cb);
